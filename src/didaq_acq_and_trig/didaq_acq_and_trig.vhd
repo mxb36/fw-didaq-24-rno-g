@@ -485,7 +485,7 @@ inst_ring_buffer : ring_buffer
 		rden			=> adc_fifo_rd_ack(i),
       rdaddress	=> internal_ram_rd_adr(i),
       wraddress	=> internal_ram_wr_adr,
-		data			=> internal_pretrig_data(i,127), --internal_ram_wr_data_2(i),
+		data			=> internal_pretrig_data(i,191), --internal_ram_wr_data_2(i),
 		q				=> internal_ram_rd_data(i));
 end generate;
 ----------------------------------------------------------------
@@ -810,7 +810,7 @@ inst_beam_trig : entity work.power_trig
 		clk_reg_i		=> clk_trig,
 		enable_i 		=> ptrigger_ctrl_trig_domain(1 downto 0),
 		beam_mask_i		=> ptrigger_ctrl_trig_domain(27 downto 16),
-		channel_mask_i	=> --fill
+		channel_mask_i	=> ptrigger_ctrl_trig_somain(15 downto 12),
 		trig_thresholds_i => beam_trig_threshold,
 		servo_thresholds_i => beam_servo_threshold,
 		
