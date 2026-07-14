@@ -225,6 +225,8 @@ signal internal_last_beam_pattern_wr_clk_latched : std_logic_vector(9 downto 0);
 signal beam_trigs_for_scalers : std_logic_vector(9 downto 0); 
 signal beam_servos_for_scalers : std_logic_vector(9 downto 0); 
 
+signal coinc_trig_to_scalars : std_logic_vector(27 downto 0);
+signal phased_trig_to_scalars : std_logic_vector(25 downto 0);
 signal coinc_trig0_hit_singles : std_logic_vector(11 downto 0);
 signal coinc_trig1_hit_singles : std_logic_vector(11 downto 0);
 
@@ -736,121 +738,137 @@ begin
 	end if;
 end process;
 --------------------------------------
-inst_coinc_trig0 : entity work.coinc_trig
-	port map(
-		arstn        => arstn,
-      clk			 => clk_trig,
-		data0			 => internal_trig_data(0),	--8 samples of 8 bit data
-		data1			 => internal_trig_data(1),				
-		data2			 => internal_trig_data(2),
-		data3			 => internal_trig_data(3),	
-		data4			 => internal_trig_data(4),					
-		data5			 => internal_trig_data(5),	
-		data6			 => internal_trig_data(6),
-		data7			 => internal_trig_data(7),					
-		data8			 => internal_trig_data(8),
-		data9			 => internal_trig_data(9),
-		data10		 => internal_trig_data(10),
-		data11		 => internal_trig_data(11),	
-		trig_en		 => trigger_ctrl1_trig_domain(1 downto 0),
-		trig_mode	 => trigger_ctrl1_trig_domain(5),
-		trig_mask	 => trigger_ctrl1_trig_domain(27 downto 16),
-		trig_hit_rq	 => trigger_ctrl1_trig_domain(4 downto 2),
-		trig_window	 => trigger_ctrl1_trig_domain(11 downto 8),
-		thresh0	 	 => coinc_trig_threshold(0),
-		thresh1	 	 => coinc_trig_threshold(1),
-		thresh2	 	 => coinc_trig_threshold(2),
-		thresh3	 	 => coinc_trig_threshold(3),
-		thresh4	 	 => coinc_trig_threshold(4),
-		thresh5	 	 => coinc_trig_threshold(5),
-		thresh6	 	 => coinc_trig_threshold(6),
-		thresh7	 	 => coinc_trig_threshold(7),
-		thresh8	 	 => coinc_trig_threshold(8),
-		thresh9	 	 => coinc_trig_threshold(9),
-		thresh10	 	 => coinc_trig_threshold(10),
-		thresh11	 	 => coinc_trig_threshold(11),
-		last_trigger_hit_pattern_o	=> last_coinc_trig_hit_pattern_trig_clk(11 downto 0),
-		singles_o	 => coinc_trig0_hit_singles, --//for scalers. Note that singles are still active even if channel masked from trig
-		trig_o		 => internal_coinc_trig_mf(0));
+--inst_coinc_trig0 : entity work.coinc_trig
+--	port map(
+--		arstn        => arstn,
+--      clk			 => clk_trig,
+--		data0			 => internal_trig_data(0),	--8 samples of 8 bit data
+--		data1			 => internal_trig_data(1),				
+--		data2			 => internal_trig_data(2),
+--		data3			 => internal_trig_data(3),	
+--		data4			 => internal_trig_data(4),					
+--		data5			 => internal_trig_data(5),	
+--		data6			 => internal_trig_data(6),
+--		data7			 => internal_trig_data(7),					
+--		data8			 => internal_trig_data(8),
+--		data9			 => internal_trig_data(9),
+--		data10		 => internal_trig_data(10),
+--		data11		 => internal_trig_data(11),	
+--		trig_en		 => trigger_ctrl1_trig_domain(1 downto 0),
+--		trig_mode	 => trigger_ctrl1_trig_domain(5),
+--		trig_mask	 => trigger_ctrl1_trig_domain(27 downto 16),
+--		trig_hit_rq	 => trigger_ctrl1_trig_domain(4 downto 2),
+--		trig_window	 => trigger_ctrl1_trig_domain(11 downto 8),
+--		thresh0	 	 => coinc_trig_threshold(0),
+--		thresh1	 	 => coinc_trig_threshold(1),
+--		thresh2	 	 => coinc_trig_threshold(2),
+--		thresh3	 	 => coinc_trig_threshold(3),
+--		thresh4	 	 => coinc_trig_threshold(4),
+--		thresh5	 	 => coinc_trig_threshold(5),
+--		thresh6	 	 => coinc_trig_threshold(6),
+--		thresh7	 	 => coinc_trig_threshold(7),
+--		thresh8	 	 => coinc_trig_threshold(8),
+--		thresh9	 	 => coinc_trig_threshold(9),
+--		thresh10	 	 => coinc_trig_threshold(10),
+--		thresh11	 	 => coinc_trig_threshold(11),
+--		last_trigger_hit_pattern_o	=> last_coinc_trig_hit_pattern_trig_clk(11 downto 0),
+--		singles_o	 => coinc_trig0_hit_singles, --//for scalers. Note that singles are still active even if channel masked from trig
+--		trig_o		 => internal_coinc_trig_mf(0));
 --------------------------------------
-inst_coinc_trig1 : entity work.coinc_trig
+inst_coinc_trig : entity work.coinc_trig
 	port map(
-		arstn        => arstn,
-      clk			 => clk_trig,
-		data0			 => internal_trig_data(12),	--8 samples of 8 bit data (64 bits wide)
-		data1			 => internal_trig_data(13),				
-		data2			 => internal_trig_data(14),
-		data3			 => internal_trig_data(15),	
-		data4			 => internal_trig_data(16),					
-		data5			 => internal_trig_data(17),	
-		data6			 => internal_trig_data(18),
-		data7			 => internal_trig_data(19),					
-		data8			 => internal_trig_data(20),
-		data9			 => internal_trig_data(21),
-		data10		 => internal_trig_data(22),
-		data11		 => internal_trig_data(23),	
-		trig_en		 => trigger_ctrl2_trig_domain(1 downto 0),
-		trig_mode	 => trigger_ctrl2_trig_domain(5),
-		trig_mask	 => trigger_ctrl2_trig_domain(27 downto 16),
-		trig_hit_rq	 => trigger_ctrl2_trig_domain(4 downto 2),
-		trig_window	 => trigger_ctrl2_trig_domain(11 downto 8),
-		thresh0	 	 => coinc_trig_threshold(12),
-		thresh1	 	 => coinc_trig_threshold(13),
-		thresh2	 	 => coinc_trig_threshold(14),
-		thresh3	 	 => coinc_trig_threshold(15),
-		thresh4	 	 => coinc_trig_threshold(16),
-		thresh5	 	 => coinc_trig_threshold(17),
-		thresh6	 	 => coinc_trig_threshold(18),
-		thresh7	 	 => coinc_trig_threshold(19),
-		thresh8	 	 => coinc_trig_threshold(20),
-		thresh9	 	 => coinc_trig_threshold(21),
-		thresh10	 	 => coinc_trig_threshold(22),
-		thresh11	 	 => coinc_trig_threshold(23),
-		last_trigger_hit_pattern_o	=> last_coinc_trig_hit_pattern_trig_clk(23 downto 12),
-		singles_o	 => coinc_trig1_hit_singles, --//for scalers. Note that singles are still active even if channel masked from trig
-		trig_o		 => internal_coinc_trig_mf(1));
+		rst_i        => not arstn,
+      clk_data_i	 => clk_trig, 
+		ch_data_i	 => internal_trig_data,	--8 samples of 8 bit data (64 bits wide)
+		trig_0_enable_i => trigger_ctrl1_trig_domain(1 downto 0),
+		trig_0_ch_mask_i => trigger_ctrl1_trig_domain(27 downto 16),
+		trig_1_enable_i => trigger_ctrl2_trig_domain(1 downto 0),
+		trig_1_ch_mask_i => trigger_ctrl2_trig_domain(27 downto 16),
+		
+		vpp_mode_i => trigger_ctrl2_trig_domain(5),
+	   coinc_window_i => trigger_ctrl2_trig_domain(11 downto 8),
+		num_coinc_i => trigger_ctrl2_trig_domain(4 downto 2),
+		
+		trig_thresholds_i => coinc_trig_threshold,
+		--servo_thresholds_i => --fill
+		trig_bits_o => coinc_trig_to_scalars,
+		trig0_o => internal_coinc_trig_mf(0),
+		trig0_metadata_o => last_coinc_trig_hit_pattern_trig_clk(11 downto 0),
+		trig1_o => internal_coinc_trig_mf(1),
+		trig_1_metadata_o => last_coinc_trig_hit_pattern_trig_clk(23 downto 12));
 --------------------------------------
-inst_beam_trig : entity work.beamforming_trig
+inst_beam_trig : entity work.power_trig
 	port map(
-		arstn        => arstn,
-      clk			 => clk_trig,							
-		data0			 => internal_trig_data(0),	--8 samples of 8 bit data
-		data1			 => internal_trig_data(1),					
-		data2			 => internal_trig_data(2),
-		data3			 => internal_trig_data(3),	
-		beamform_en	 => ptrigger_ctrl_trig_domain(1 downto 0),
-		beam_mask	 => ptrigger_ctrl_trig_domain(27 downto 16),
-		gain_ctrl_sel=> ptrigger_ctrl_trig_domain(8),
-		pow_width_sel=> ptrigger_ctrl_trig_domain(4),
-		thresh0	 	 => beam_servo_threshold(0) & beam_trig_threshold(0),
-		thresh1	 	 => beam_servo_threshold(1) & beam_trig_threshold(1),
-		thresh2	 	 => beam_servo_threshold(2) & beam_trig_threshold(2),
-		thresh3	 	 => beam_servo_threshold(3) & beam_trig_threshold(3),
-		thresh4	 	 => beam_servo_threshold(4) & beam_trig_threshold(4),
-		thresh5	 	 => beam_servo_threshold(5) & beam_trig_threshold(5),
-		thresh6	 	 => beam_servo_threshold(6) & beam_trig_threshold(6),
-		thresh7	 	 => beam_servo_threshold(7) & beam_trig_threshold(7),
-		thresh8	 	 => beam_servo_threshold(8) & beam_trig_threshold(8),
-		thresh9	 	 => beam_servo_threshold(9) & beam_trig_threshold(9),
-		last_trigger_beam_power => open,
-		last_trigger_hit_pattern_o => internal_last_beam_pattern_trig_clk,
-		beamtrigs_o	 => beam_trigs_for_scalers,
-		beamservos_o => beam_servos_for_scalers,
-		trig_o		 => internal_phased_trig );
+		rst_i      		=> not arstn,
+      clk_data_i		=> clk_trig,
+		ch0_data_i		=> internal_trig_data(0),
+		ch1_data_i		=> internal_trig_data(1),
+		ch2_data_i		=> internal_trig_data(2),
+		ch3_data_i		=> internal_trig_data(3),
+		data_valid_i	=> --fill
+		
+		clk_reg_i		=> clk_trig,
+		enable_i 		=> ptrigger_ctrl_trig_domain(1 downto 0),
+		beam_mask_i		=> ptrigger_ctrl_trig_domain(27 downto 16),
+		channel_mask_i	=> --fill
+		trig_thresholds_i => beam_trig_threshold,
+		servo_thresholds_i => beam_servo_threshold,
+		
+		trig_bits_o 	=> phased_trig_to_scalars,
+		trig_o 			=> internal_phased_trig,
+		trig_metadata_o=>	internal_last_beam_pattern_trig_clk
+		
+		power_o => open--debug
+		);
+		
+		--
+		--gain_ctrl_sel=> ptrigger_ctrl_trig_domain(8),
+		--pow_width_sel=> ptrigger_ctrl_trig_domain(4),
+		--last_trigger_beam_power => open,
+		--last_trigger_hit_pattern_o => internal_last_beam_pattern_trig_clk,
+		--beamtrigs_o	 => beam_trigs_for_scalers,
+		--beamservos_o => beam_servos_for_scalers
 --------------------------------------		
 inst_scalers : entity work.scalers_top
 	port map(
-		arst_i					=> not arstn, --//rst is active high on this module
+		rst_i						=> not arstn, --//rst is active high on this module
 		clk_i						=> clk_trig,
-		rdclk_i					=> clk_rd,
+		
+		coinc_trig_bits_i		=> coinc_trig_to_scalars,
+		phased_trig_bits_i	=> phased_trig_to_scalars,
+		
+		pps_i						=> internal_pps_trigclk(2),
 		gate_i					=> internal_pps_trigclk(2),
-		coinc_trig_singles 	=> coinc_trig1_hit_singles & coinc_trig0_hit_singles,
-		coinc_trigs				=> internal_coinc_trig_mf,
-		beam_trigs  			=> beam_trigs_for_scalers,
-		beam_trig_servos 		=> beam_servos_for_scalers,
-		total_beam_trig		=> internal_phased_trig,
-		clkcounts_per_pps_i  => internal_clock_per_pps_counter_latched,
-		scaler_sel_reg_i		=> scaler_sel_reg_i,
-		scaler_to_read_o  	=> scaler_read_reg_o);
+		
+		scalar_refresh_i		=> scaler_sel_reg_i(16)
+		scalar_to_read_i		=> scaler_sel_reg_i(9 downto 0),
+		scalar_o					=> scaler_read_reg_o
+		);
+		--
+--		rdclk_i					=> clk_rd,
+--		gate_i					=> internal_pps_trigclk(2),
+--		coinc_trig_singles 	=> coinc_trig1_hit_singles & coinc_trig0_hit_singles,
+--		coinc_trigs				=> internal_coinc_trig_mf,
+--		beam_trigs  			=> beam_trigs_for_scalers,
+--		beam_trig_servos 		=> beam_servos_for_scalers,
+--		total_beam_trig		=> internal_phased_trig,
+--		clkcounts_per_pps_i  => internal_clock_per_pps_counter_latched,
+--		scaler_sel_reg_i		=> scaler_sel_reg_i,
+--		scaler_to_read_o  	=> scaler_read_reg_o);
+--------------------------------------		
+inst_event : entity work.event_top
+	port map(
+--		rst_i						=> not arstn, --//rst is active high on this module
+--		clk_i						=> clk_trig,
+--		rdclk_i					=> clk_rd,
+--		gate_i					=> internal_pps_trigclk(2),
+--		coinc_trig_singles 	=> coinc_trig1_hit_singles & coinc_trig0_hit_singles,
+--		coinc_trigs				=> internal_coinc_trig_mf,
+--		beam_trigs  			=> beam_trigs_for_scalers,
+--		beam_trig_servos 		=> beam_servos_for_scalers,
+--		total_beam_trig		=> internal_phased_trig,
+--		clkcounts_per_pps_i  => internal_clock_per_pps_counter_latched,
+--		scaler_sel_reg_i		=> scaler_sel_reg_i,
+--		scaler_to_read_o  	=> scaler_read_reg_o);
 --------------------------------------
 end rtl;

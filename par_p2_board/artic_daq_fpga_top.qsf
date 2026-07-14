@@ -517,14 +517,10 @@ set_global_assignment -name IP_FILE ../src/altera_p2_board/io/ddro_6w.ip
 set_global_assignment -name IP_FILE ../src/altera_p2_board/io/ddro_1w.ip
 set_global_assignment -name VHDL_FILE ../src/artic_daq_fpga_top/rtl/artic_daq_fpga_p2_board_top.vhd
 set_global_assignment -name SDC_FILE artic_daq_late_timing_constraints.sdc
-set_global_assignment -name SIGNALTAP_FILE stp1.stp
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS_WEAK_PULLUP "AS INPUT TRI-STATED WITHOUT WEAK PULL-UP"
 set_global_assignment -name BOARD default
-set_global_assignment -name SIGNALTAP_FILE stp2.stp
-set_global_assignment -name SIGNALTAP_FILE tap_jesd.stp
 set_global_assignment -name IP_FILE ../src/altera_p2_board/pll/sysref_pll.ip
 set_instance_assignment -name INPUT_TERMINATION "OCT 100 OHMS" -to clk_gts_ref[*]
-set_global_assignment -name IP_FILE GTS_system_PLL.ip
 set_global_assignment -name IP_FILE ../src/altera_p2_board/pll/GTS_system_PLL.ip
 set_instance_assignment -name XCVR_S10_REFCLK_TERM_TRISTATE TRISTATE_ON -to clk_gts_pll_ref[0]
 set_instance_assignment -name XCVR_S10_REFCLK_TERM_TRISTATE TRISTATE_ON -to clk_gts_pll_ref[1]
@@ -541,6 +537,7 @@ set_global_assignment -name VHDL_FILE ../src/didaq_acq_and_trig/scalers_top.vhd
 set_global_assignment -name VHDL_FILE ../src/didaq_acq_and_trig/beamforming_trig.vhd
 set_global_assignment -name VHDL_FILE ../src/didaq_acq_and_trig/pow_lut.vhd
 set_global_assignment -name IP_FILE ../src/altera_p2_board/niosv/ip/niosv_pd/niosv_pd_intel_mailbox_client_0.ip
-set_global_assignment -name SIGNALTAP_FILE tap_spiSlave.stp
 set_global_assignment -name SEARCH_PATH ../src
 set_global_assignment -name SEARCH_PATH ../src/didaq_acq_and_trig
+set_global_assignment -name FLOW_DISABLE_ASSEMBLER OFF
+set_global_assignment -name FLOW_ENABLE_EARLY_TIMING_ANALYSIS OFF
