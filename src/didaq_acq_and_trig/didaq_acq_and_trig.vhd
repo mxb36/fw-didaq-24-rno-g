@@ -858,17 +858,59 @@ inst_scalers : entity work.scalers_top
 --------------------------------------		
 inst_event : entity work.event_top
 	port map(
---		rst_i						=> not arstn, --//rst is active high on this module
---		clk_i						=> clk_trig,
---		rdclk_i					=> clk_rd,
---		gate_i					=> internal_pps_trigclk(2),
---		coinc_trig_singles 	=> coinc_trig1_hit_singles & coinc_trig0_hit_singles,
---		coinc_trigs				=> internal_coinc_trig_mf,
---		beam_trigs  			=> beam_trigs_for_scalers,
---		beam_trig_servos 		=> beam_servos_for_scalers,
---		total_beam_trig		=> internal_phased_trig,
---		clkcounts_per_pps_i  => internal_clock_per_pps_counter_latched,
---		scaler_sel_reg_i		=> scaler_sel_reg_i,
---		scaler_to_read_o  	=> scaler_read_reg_o);
+		rst_i						=> not arstn, --//rst is active high on this module
+		
+		wr_clk_i					=> clk_trig,
+		data_i					=> internal_trig_data,
+		
+		wr_enable_i				=> 
+		soft_reset_i			=> 
+		
+		rf_trig_0_i				=> 
+		rf_trig_0_meta_i		=> 
+		
+		rf_trig_1_i				=> 
+		rf_trig_1_meta_i		=> 
+		
+		pa_trig_i				=> 
+		pa_trig_meta_i			=> 
+		
+		soft_trig_i				=> 
+		ext_trig_i				=> 
+		
+		run_number_i			=> 
+		-- to gpio
+      event_ready_o			=>
+		
+		-- from pps block, might be on different clock so may need cdc's to data clock
+      pps_clk_i				=>  -- if on diff clock
+      pps_i						=> -- single clock wide pps pulse, not raw
+      do_pps_trig_i			=>  -- from regs
+      pps_trig_holdoff_i	=> 
+      -- read side clock. things are either manual which go through registers
+      -- or with automatic event control which reads out 1 event at a time with a 
+      -- pop data signal
+      rd_clk_i 				=> 
+      rd_pulse_i				=> 
+
+		rd_manual_i				=> 
+		rd_channel_i			=> 
+		rd_block_i				=> 
+		
+		--register sized data out
+		data_valid_o			=> 
+		data_o					=> 
+		data_ready_rd_clk_o	=> 
+		
+		-- debug things
+		wr_pointer_o			=> 
+		wr_busy_o				=> 
+		wr_done_o				=> 
+		trigger_deadtime_o	=> 
+		
+		rd_pointer_o			=> 
+		rd_lock_o				=> 
+		rd_done_o				=> 
+	);		
 --------------------------------------
 end rtl;
