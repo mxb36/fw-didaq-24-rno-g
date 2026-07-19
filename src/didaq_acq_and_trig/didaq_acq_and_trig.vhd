@@ -301,7 +301,7 @@ begin
 		
 	elsif clk_wr'event and clk_wr = '1' then	
 		
-		internal_coinc_trig <= internal_coinc_trig_mf; --//from coinc. trig modules
+		internal_coinc_trig <= ; --//from coinc. trig modules
 		
 		internal_trigger_last <= internal_trigger;
 		internal_trigger <= "00" & (internal_pps_risedge and capture_ctrl_wr_domain(24)) &
@@ -858,35 +858,35 @@ inst_scalers : entity work.scalers_top
 --------------------------------------		
 inst_event : entity work.event_top
 	port map(
-		rst_i						=> not arstn, --//rst is active high on this module
+		rst_i					=> not arstn, --//rst is active high on this module
 		
-		wr_clk_i					=> clk_trig,
+		wr_clk_i				=> clk_trig,
 		data_i					=> internal_trig_data,
 		
 		wr_enable_i				=> 
 		soft_reset_i			=> 
 		
-		rf_trig_0_i				=> 
-		rf_trig_0_meta_i		=> 
+		rf_trig_0_i				=> internal_coinc_trig_mf(0),
+		rf_trig_0_meta_i		=> last_coinc_trig_hit_pattern_trig_clk(11 downto 0),
 		
-		rf_trig_1_i				=> 
-		rf_trig_1_meta_i		=> 
+		rf_trig_1_i				=> internal_coinc_trig_mf(1),
+		rf_trig_1_meta_i		=> last_coinc_trig_hit_pattern_trig_clk(23 downto 12),
 		
-		pa_trig_i				=> 
-		pa_trig_meta_i			=> 
+		pa_trig_i				=> internal_phased_trig,
+		pa_trig_meta_i			=> internal_last_beam_pattern_trig_clk,
 		
 		soft_trig_i				=> 
-		ext_trig_i				=> 
+		ext_trig_i				=> ext_trig_i,
 		
 		run_number_i			=> 
 		-- to gpio
-      event_ready_o			=>
+        event_ready_o			=> 
 		
 		-- from pps block, might be on different clock so may need cdc's to data clock
-      pps_clk_i				=>  -- if on diff clock
-      pps_i						=> -- single clock wide pps pulse, not raw
-      do_pps_trig_i			=>  -- from regs
-      pps_trig_holdoff_i	=> 
+      pps_clk_i				=>  clk_wr,			-- if on diff clock
+      pps_i					=> pps_i, -- single clock wide pps pulse, not raw
+      do_pps_trig_i			=>  			-- from regs
+      pps_trig_holdoff_i	=> ,
       -- read side clock. things are either manual which go through registers
       -- or with automatic event control which reads out 1 event at a time with a 
       -- pop data signal
@@ -900,13 +900,13 @@ inst_event : entity work.event_top
 		--register sized data out
 		data_valid_o			=> 
 		data_o					=> 
-		data_ready_rd_clk_o	=> 
+		data_ready_rd_clk_o 	=> event_ready_o,
 		
 		-- debug things
 		wr_pointer_o			=> 
 		wr_busy_o				=> 
 		wr_done_o				=> 
-		trigger_deadtime_o	=> 
+		trigger_deadtime_o		=> 
 		
 		rd_pointer_o			=> 
 		rd_lock_o				=> 
