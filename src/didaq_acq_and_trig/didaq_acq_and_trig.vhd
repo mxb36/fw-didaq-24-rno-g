@@ -476,37 +476,37 @@ begin
 end process;
 ----------------------------------------------------------------	
 --generate ring-buffer ram blocks
-gen_ring_buffer_rams : for i in 0 to 23 generate 
-inst_ring_buffer : ring_buffer
-   port map(
-	   wrclock    	=> clk_wr,                                                                           
-      rdclock    	=> clk_rd,
-      wren			=> internal_ram_wr_en,
-		rden			=> adc_fifo_rd_ack(i),
-      rdaddress	=> internal_ram_rd_adr(i),
-      wraddress	=> internal_ram_wr_adr,
-		data			=> internal_pretrig_data(i,191), --internal_ram_wr_data_2(i),
-		q				=> internal_ram_rd_data(i));
-end generate;
+--gen_ring_buffer_rams : for i in 0 to 23 generate 
+--inst_ring_buffer : ring_buffer
+ --  port map(
+--	   wrclock    	=> clk_wr,                                                                           
+--      rdclock    	=> clk_rd,
+--      wren			=> internal_ram_wr_en,
+--		rden			=> adc_fifo_rd_ack(i),
+--      rdaddress	=> internal_ram_rd_adr(i),
+--      wraddress	=> internal_ram_wr_adr,
+--		data			=> internal_pretrig_data(i,191), --internal_ram_wr_data_2(i),
+--		q				=> internal_ram_rd_data(i));
+--end generate;
 ----------------------------------------------------------------
 --read ram ctrl
-process(clk_rd,arstn)
-begin
-	for i in 0 to 23 loop
-		if arstn = '0' then
-			internal_ram_rd_adr(i) 				<= (others=>'0');
-			internal_ram_rd_adr_counter(i) 	<= (others=>'0');
-		--//reset event after done reading
-		elsif clk_rd'event and clk_rd = '1' and capture_ctrl_reg_i(8) = '1' then
-			internal_ram_rd_adr(i) 				<= (others=>'0');
-			internal_ram_rd_adr_counter(i) 	<= (others=>'0');
-		--//increment address each time the fifo_rd_ack is pulsed
-		elsif clk_rd'event and clk_rd = '1' and adc_fifo_rd_ack(i) = '1' then
-			internal_ram_rd_adr(i)(9 downto 0) 	<= readout_ctrl_reg_i(9 downto 0) + internal_ram_rd_adr_counter(i)(9 downto 0);
-			internal_ram_rd_adr_counter(i) 		<= internal_ram_rd_adr_counter(i) + 1; --//increment address
-		end if;
-	end loop;
-end process;
+--process(clk_rd,arstn)
+--begin
+--	for i in 0 to 23 loop
+--		if arstn = '0' then
+--			internal_ram_rd_adr(i) 				<= (others=>'0');
+--			internal_ram_rd_adr_counter(i) 	<= (others=>'0');
+--		--//reset event after done reading
+--		elsif clk_rd'event and clk_rd = '1' and capture_ctrl_reg_i(8) = '1' then
+--			internal_ram_rd_adr(i) 				<= (others=>'0');
+--			internal_ram_rd_adr_counter(i) 	<= (others=>'0');
+--		--//increment address each time the fifo_rd_ack is pulsed
+--		elsif clk_rd'event and clk_rd = '1' and adc_fifo_rd_ack(i) = '1' then
+--			internal_ram_rd_adr(i)(9 downto 0) 	<= readout_ctrl_reg_i(9 downto 0) + internal_ram_rd_adr_counter(i)(9 downto 0);
+--			internal_ram_rd_adr_counter(i) 		<= internal_ram_rd_adr_counter(i) + 1; --//increment address
+--		end if;
+--	end loop;
+--end process;
 ----------------------------------------------------------------
 process(clk_rd,arstn) --assign status/meta read-only registers
 begin
@@ -863,8 +863,8 @@ inst_event : entity work.event_top
 		wr_clk_i				=> clk_trig,
 		data_i					=> internal_trig_data,
 		
-		wr_enable_i				=> 
-		soft_reset_i			=> 
+		wr_enable_i				=> ,
+		soft_reset_i			=> 1#0,
 		
 		rf_trig_0_i				=> internal_coinc_trig_mf(0),
 		rf_trig_0_meta_i		=> last_coinc_trig_hit_pattern_trig_clk(11 downto 0),
@@ -875,42 +875,42 @@ inst_event : entity work.event_top
 		pa_trig_i				=> internal_phased_trig,
 		pa_trig_meta_i			=> internal_last_beam_pattern_trig_clk,
 		
-		soft_trig_i				=> 
+		soft_trig_i				=> ,
 		ext_trig_i				=> ext_trig_i,
 		
-		run_number_i			=> 
+		run_number_i			=> ,
 		-- to gpio
-        event_ready_o			=> 
+        event_ready_o			=> open,
 		
 		-- from pps block, might be on different clock so may need cdc's to data clock
       pps_clk_i				=>  clk_wr,			-- if on diff clock
       pps_i					=> pps_i, -- single clock wide pps pulse, not raw
-      do_pps_trig_i			=>  			-- from regs
+      do_pps_trig_i			=>  ,			-- from regs
       pps_trig_holdoff_i	=> ,
       -- read side clock. things are either manual which go through registers
       -- or with automatic event control which reads out 1 event at a time with a 
       -- pop data signal
-      rd_clk_i 				=> 
-      rd_pulse_i				=> 
+      rd_clk_i 					=> clk_rd,
+      rd_pulse_i				=> ,
 
-		rd_manual_i				=> 
-		rd_channel_i			=> 
-		rd_block_i				=> 
+		rd_manual_i				=> ,
+		rd_channel_i			=> ,
+		rd_block_i				=> readout_ctrl_reg_i(9 downto 0),
 		
 		--register sized data out
-		data_valid_o			=> 
-		data_o					=> 
+		data_valid_o			=> open,
+		data_o					=> internal_ram_rd_data,
 		data_ready_rd_clk_o 	=> event_ready_o,
 		
 		-- debug things
-		wr_pointer_o			=> 
-		wr_busy_o				=> 
-		wr_done_o				=> 
-		trigger_deadtime_o		=> 
+		wr_pointer_o			=> open,
+		wr_busy_o				=> open,
+		wr_done_o				=> open,
+		trigger_deadtime_o		=> open,
 		
-		rd_pointer_o			=> 
-		rd_lock_o				=> 
-		rd_done_o				=> 
+		rd_pointer_o			=> open,
+		rd_lock_o				=> open,
+		rd_done_o				=> open,
 	);		
 --------------------------------------
 end rtl;
