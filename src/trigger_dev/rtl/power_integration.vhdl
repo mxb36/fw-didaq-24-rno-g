@@ -47,15 +47,16 @@ architecture rtl of power_integration is
     type bigger_power_array is array (NUM_BEAMS-1 downto 0) of unsigned(19 downto 0);
     signal power_sum_10 : bigger_power_array:=(others=>(others=>'0')); --partial power integration (zero offset)
     signal power_sum_11 : bigger_power_array:=(others=>(others=>'0')); --partial power integration (4 sample offset)
-    signal power_sum_12 : bigger_power_array:=(others=>(others=>'0')); --partial power integration (8 sample offset)
-    signal power_sum_13 : bigger_power_array:=(others=>(others=>'0')); --partial power integration (12 sample offset)
+    --signal power_sum_12 : bigger_power_array:=(others=>(others=>'0')); --partial power integration (8 sample offset)
+    --signal power_sum_13 : bigger_power_array:=(others=>(others=>'0')); --partial power integration (12 sample offset)
+    signal power_sum_helper : bigger_power_array:=(others=>(others=>'0')); -- calculation help
 
     --add two more overlap to having a single sample sliding window. seems to be better
     type avg_power_array is array (NUM_BEAMS-1 downto 0) of unsigned(13 downto 0);
     signal avg_power0: avg_power_array:=(others=>(others=>'0')); --average power (power_sum shifted down)
     signal avg_power1: avg_power_array:=(others=>(others=>'0')); --average power (power_sum shifted down)
-    signal avg_power2: avg_power_array:=(others=>(others=>'0')); --average power (power_sum shifted down)
-    signal avg_power3: avg_power_array:=(others=>(others=>'0')); --average power (power_sum shifted down)
+    --signal avg_power2: avg_power_array:=(others=>(others=>'0')); --average power (power_sum shifted down)
+    --signal avg_power3: avg_power_array:=(others=>(others=>'0')); --average power (power_sum shifted down)
 
     component power_lut_8 is --8 bit lut for calculating power
     port(
@@ -128,13 +129,14 @@ begin
 
         power_sum_10 <= (others=>(others=>'0'));
         power_sum_11 <= (others=>(others=>'0'));
-        power_sum_12 <= (others=>(others=>'0'));
-        power_sum_13 <= (others=>(others=>'0'));
+        --power_sum_12 <= (others=>(others=>'0'));
+        --power_sum_13 <= (others=>(others=>'0'));
+        power_sum_helper <= (others=>(others=>'0'));
 
         avg_power0 <= (others=>(others=>'0'));
         avg_power1 <= (others=>(others=>'0'));
-        avg_power2 <= (others=>(others=>'0'));
-        avg_power3 <= (others=>(others=>'0'));
+        --avg_power2 <= (others=>(others=>'0'));
+        --avg_power3 <= (others=>(others=>'0'));
 
 
     elsif rising_edge(clk_data_i) and (enable_i='1') then
@@ -156,9 +158,15 @@ begin
             power_sum_7(i) <= power_sum_5(i);
             power_sum_8(i) <= power_sum_6(i);
 
+	    --rolling value equal to sum of power_sum 2-7(since everything moves forward 2 after calculation)
+	    power_sum_helper(i) <= power_sum_helper(i) + power_sum_0(i)+power_sum_1(i) -power_sum_6(i) - power_sum_7(i);
+	    	
+
             --add together powers in the 32 samples (at 2GHz = 16 ns integration windows) TODO: refactor for timing
-            power_sum_10(i)<=resize(power_sum_0(i),20)+power_sum_1(i)+power_sum_2(i)+power_sum_3(i)+power_sum_4(i)+power_sum_5(i)+power_sum_6(i)+power_sum_7(i);
-            power_sum_11(i)<=resize(power_sum_1(i),20)+power_sum_2(i)+power_sum_3(i)+power_sum_4(i)+power_sum_5(i)+power_sum_6(i)+power_sum_7(i)+power_sum_8(i);
+            --power_sum_10(i)<=resize(power_sum_0(i),20)+power_sum_1(i)+power_sum_2(i)+power_sum_3(i)+power_sum_4(i)+power_sum_5(i)+power_sum_6(i)+power_sum_7(i);
+            power_sum_10(i)<=resize(power_sum_0(i),20)+power_sum_1(i)+power_sum_helper(i);
+            --power_sum_11(i)<=resize(power_sum_1(i),20)+power_sum_2(i)+power_sum_3(i)+power_sum_4(i)+power_sum_5(i)+power_sum_6(i)+power_sum_7(i)+power_sum_8(i);
+            power_sum_11(i)<=resize(power_sum_1(i),20)+power_sum_helper(i)+power_sum_8(i);
 
             --power_sum_12(i)<=resize(power_sum_2(i),20)+power_sum_3(i)+power_sum_4(i)+power_sum_5(i);
             --power_sum_13(i)<=resize(power_sum_3(i),20)+power_sum_4(i)+power_sum_5(i)+power_sum_6(i);
