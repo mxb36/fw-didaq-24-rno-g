@@ -840,7 +840,7 @@ inst_scalers : entity work.scalers_top
 		pps_i						=> internal_pps_trigclk(2),
 		gate_i					=> internal_pps_trigclk(2),
 		
-		scalar_refresh_i		=> scaler_sel_reg_i(16)
+		scalar_refresh_i		=> scaler_sel_reg_i(16),
 		scalar_to_read_i		=> scaler_sel_reg_i(9 downto 0),
 		scalar_o					=> scaler_read_reg_o
 		);
