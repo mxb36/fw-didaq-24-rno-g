@@ -17,7 +17,7 @@ use ieee.numeric_std.all;
 
 use work.defs.all;
 
-entity scalers_top is
+entity new_scalers_top is
 	generic(
 		scaler_width   : integer := 16);
 	port(
