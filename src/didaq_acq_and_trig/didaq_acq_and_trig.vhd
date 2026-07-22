@@ -775,7 +775,7 @@ end process;
 --		singles_o	 => coinc_trig0_hit_singles, --//for scalers. Note that singles are still active even if channel masked from trig
 --		trig_o		 => internal_coinc_trig_mf(0));
 --------------------------------------
-inst_coinc_trig : entity work.coinc_trig
+inst_coinc_trig : entity work.coinc_trigger_24_ch 
 	port map(
 		rst_i        => not arstn,
       clk_data_i	 => clk_trig, 
@@ -797,7 +797,7 @@ inst_coinc_trig : entity work.coinc_trig
 		trig1_o => internal_coinc_trig_mf(1),
 		trig_1_metadata_o => last_coinc_trig_hit_pattern_trig_clk(23 downto 12));
 --------------------------------------
-inst_beam_trig : entity work.power_trig
+inst_beam_trig : entity work.power_trigger
 	port map(
 		rst_i      		=> not arstn,
       clk_data_i		=> clk_trig,
@@ -829,7 +829,7 @@ inst_beam_trig : entity work.power_trig
 		--beamtrigs_o	 => beam_trigs_for_scalers,
 		--beamservos_o => beam_servos_for_scalers
 --------------------------------------		
-inst_scalers : entity work.scalers_top
+inst_scalers : entity work.new_scalers_top
 	port map(
 		rst_i						=> not arstn, --//rst is active high on this module
 		clk_i						=> clk_trig,
