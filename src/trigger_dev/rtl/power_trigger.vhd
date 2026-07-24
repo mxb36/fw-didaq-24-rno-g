@@ -24,7 +24,8 @@ generic(
 		  NUM_BEAMS : integer := 12;
 		  NUM_SAMPLES : integer := 4;
 		  SAMPLE_LENGTH : integer := 8;
-		  INTERP_FACTOR : integer := 2
+		  INTERP_FACTOR : integer := 2;
+        input_power_thresh_bits:	integer := 16;
         );
 
 port(
@@ -43,8 +44,8 @@ port(
         enable_i            : in std_logic;
         beam_mask_i         : in std_logic_vector(NUM_BEAMS-1 downto 0);
         channel_mask_i      : in std_logic_vector(NUM_PA_CHANNELS-1 downto 0);
-        trig_thresholds_i   : in std_logic_vector(NUM_BEAMS*12-1 downto 0);
-        servo_thresholds_i  : in std_logic_vector(NUM_BEAMS*12-1 downto 0);
+        trig_thresholds_i   : in std_logic_vector(NUM_BEAMS*input_power_thresh_bits-1 downto 0);
+        servo_thresholds_i  : in std_logic_vector(NUM_BEAMS*input_power_thresh_bits-1 downto 0);
 
         -- output
         trig_bits_o : out	std_logic_vector(2*(NUM_BEAMS+1)-1 downto 0); --for scalers
@@ -68,7 +69,6 @@ constant phased_sum_length: integer := 32; --8 real samples ... not sure if it s
 constant phased_sum_power_bits: integer := 16;--16 with calc. trying 7-> 14 lut
 constant num_power_bits: integer := 18;
 constant power_sum_bits: integer := 18; --actually 25 but this fits into the io regs
-constant input_power_thresh_bits:	integer := 12;
 constant power_length: integer := 12;
 constant num_div: integer := 5;--can be calculated using -> integer(log2(real(phased_sum_length)));
 constant pad_zeros: std_logic_vector(num_div-1 downto 0):=(others=>'0');
@@ -79,7 +79,7 @@ type streaming_data_array is array(NUM_PA_CHANNELS downto 0, NUM_SAMPLES-1 downt
 signal streaming_data : streaming_data_array := (others=>(others=>(others=>'0'))); --pipeline data
 
 --big arrays for thresholds/ average power
-type power_array is array (NUM_BEAMS-1 downto 0) of unsigned(13 downto 0);-- range 0 to 2**num_power_bits-1;--std_logic_vector(num_power_bits-1 downto 0); --log2(6*(16*6)^2) max power possible
+type power_array is array (NUM_BEAMS-1 downto 0) of unsigned(input_power_thresh_bits-1 downto 0);-- range 0 to 2**num_power_bits-1;--std_logic_vector(num_power_bits-1 downto 0); --log2(6*(16*6)^2) max power possible
 signal trig_beam_thresh : power_array:=(others=>(others=>'0')) ; --trigger thresholds for all beams
 signal servo_beam_thresh : power_array:=(others=>(others=>'0')) ;--(others=>(others=>'0')) --servo thresholds for all beams
 --signal power_sum : power_array:=(others=>(others=>'0')); --power integration using all 32 samples
@@ -427,8 +427,8 @@ begin
     begin
     if rising_edge(clk_data_i) then
             for i in 0 to NUM_BEAMS-1 loop
-                trig_beam_thresh(i)<=resize(input_trig_thresh(i),14)+threshold_offset;
-                servo_beam_thresh(i)<=resize(input_servo_thresh(i),14)+threshold_offset;
+                trig_beam_thresh(i)<=input_trig_thresh(i)+threshold_offset;
+                servo_beam_thresh(i)<=input_servo_thresh(i)+threshold_offset;
             end loop;
         end if;
     end process;

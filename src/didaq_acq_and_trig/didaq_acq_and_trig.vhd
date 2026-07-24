@@ -99,6 +99,9 @@ entity didaq_acq_and_trig is
 		beam_trig_thresh7_reg_i		: in   std_logic_vector(31 downto 0);
 		beam_trig_thresh8_reg_i		: in   std_logic_vector(31 downto 0);
 		beam_trig_thresh9_reg_i		: in   std_logic_vector(31 downto 0);
+		--beam_trig_thresh10_reg_i	: in   std_logic_vector(31 downto 0);
+		--beam_trig_thresh11_reg_i	: in   std_logic_vector(31 downto 0);
+		
 		--event metadata:
 		last_evt_evt_count_reg_o	: out  std_logic_vector(31 downto 0); -- In clk_avs domain (this module converts to this domain before sending)     
 		last_evt_trig_count_reg_o	: out  std_logic_vector(31 downto 0); -- In clk_avs domain (this module converts to this domain before sending)     
@@ -755,6 +758,10 @@ begin
 		beam_servo_threshold_mf(8) 	<= beam_trig_thresh8_reg_i(31 downto 16);
 		beam_trig_threshold_mf(9) 		<= beam_trig_thresh9_reg_i(15 downto 0);
 		beam_servo_threshold_mf(9) 	<= beam_trig_thresh9_reg_i(31 downto 16);
+--		beam_trig_threshold_mf(10) 		<= beam_trig_thresh10_reg_i(15 downto 0);
+--		beam_servo_threshold_mf(10) 	<= beam_trig_thresh10_reg_i(31 downto 16);
+--		beam_trig_threshold_mf(11) 		<= beam_trig_thresh11_reg_i(15 downto 0);
+--		beam_servo_threshold_mf(11) 	<= beam_trig_thresh11_reg_i(31 downto 16);
 		for i in 0 to NUM_BEAMS-1 loop
 			beam_trig_threshold(i)	<= beam_trig_threshold_mf(i);
 			beam_servo_threshold(i)	<= beam_servo_threshold_mf(i);
