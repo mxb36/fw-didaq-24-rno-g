@@ -28,12 +28,14 @@
 library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.defs.all;
+--use work.defs.all;
 
 entity single_event is
     generic(
         SAMPLE_LENGTH : integer := 8; -- or 9
         NUM_SAMPLES : integer := 4;
+        NUM_CHANNELS : integer := 24;
+        NUM_BEAMS : integer := 12;
         ADDR_DEPTH : integer := 9;
         OUTPUT_LENGTH : integer := 32 -- tbd map 24 ch out to 4 byte reg interface or port 24 ch to 24 regs? fit to reg size or packet size. TODO: update for 9 bits
     );

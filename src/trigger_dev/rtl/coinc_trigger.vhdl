@@ -17,9 +17,13 @@ library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.defs.all;
+--use work.defs.all;
 
 entity coinc_trigger_24_ch is
+generic(
+		NUM_CHANNELS   : integer := 24;
+		NUM_SAMPLES		: integer := 4;
+		SAMPLE_LENGTH  : integer := 8);
 port(
 		rst_i			: in std_logic := '1'; --global reset on start up
 		clk_data_i		: in std_logic; -- data clock

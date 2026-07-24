@@ -15,11 +15,13 @@ library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.defs.all;
+--use work.defs.all;
 
 entity new_scalers_top is
 	generic(
-		scaler_width   : integer := 16);
+		scaler_width   : integer := 16;
+		NUM_CHANNELS   : integer := 24;
+		NUM_BEAMS		: integer := 12);
 	port(
 		rst_i				: in std_logic;
 		clk_i				: in std_logic;
@@ -33,9 +35,9 @@ entity new_scalers_top is
 		scaler_refresh_i	: in std_logic; -- from regs
 		scaler_to_read_i	: in std_logic_vector(9 downto 0); --from regs
 		scaler_o			: out std_logic_vector(31 downto 0)); -- to regs, 2 scalers per reg file
-end scalers_top;
+end new_scalers_top;
 
-architecture rtl of scalers_top is
+architecture rtl of new_scalers_top is
 
 constant num_pa_scalers : integer := 3*2*(NUM_BEAMS+1); -- 3: 1Hz, 100Hz, 100mHz , 2: trig and servo, +1: total trig/servo
 constant num_rf_scalers: integer := 3*2*(NUM_CHANNELS+2); -- 3: 1Hz, 100Hz, 100mHz , 2: trig and servo, +2: total trig0, trig1, (servo) 
@@ -49,8 +51,8 @@ constant num_scalers: integer := num_pa_scalers + num_rf_scalers + 6;
 type scaler_array_type is array(num_scalers-1 downto 0) of std_logic_vector(scaler_width-1 downto 0);
 signal internal_scaler_array : scaler_array_type;
 signal latched_scaler_array : scaler_array_type; --//assigned after refresh pulse
-signal pps_cycle_counter : std_logic_vector(47 downto 0);
-signal latched_pps_cycle_counter : std_logic_vector(47 downto 0);
+signal pps_cycle_counter : std_logic_vector(scaler_width*4-1 downto 0);
+signal latched_pps_cycle_counter : std_logic_vector(scaler_width*4-1 downto 0);
 
 --//need to create a single pulse every Hz with width of 10 MHz clock period
 signal refresh_clk_counter_100Hz	:	std_logic_vector(31 downto 0) := (others=>'0');
@@ -93,11 +95,11 @@ begin
 		internal_scaler_array(2) <= pps_cycle_counter(2*SCALER_WIDTH-1 downto SCALER_WIDTH);
 		internal_scaler_array(3) <= pps_cycle_counter(3*SCALER_WIDTH-1 downto 2*SCALER_WIDTH);
 		internal_scaler_array(4) <= pps_cycle_counter(4*SCALER_WIDTH-1 downto 3*SCALER_WIDTH);
+	end if;
 
 		if pps_i = '1' and pps_i'event then
 			pps_cycle_counter <= std_logic_vector(unsigned(pps_cycle_counter) + 1);
 		end if;
-	end if;
 end process;
 
 CoincTrigScalers1Hz : for i in 0 to 52-1 generate

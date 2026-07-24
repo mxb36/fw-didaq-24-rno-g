@@ -3,12 +3,16 @@
 library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.defs.all;
+--use work.defs.all;
 
 entity beamforming is
     generic(
             station_number_i : std_logic_vector(7 downto 0);
-            bf_INTERP_FACTOR : integer := 2
+            bf_INTERP_FACTOR : integer := 2;
+            NUM_PA_CHANNELS : integer := 4;
+            NUM_SAMPLES : integer := 4;
+            SAMPLE_LENGTH : integer := 8;
+            NUM_BEAMS : integer := 12
             );
     
     port(

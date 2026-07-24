@@ -135,13 +135,19 @@ end component;
 ---------------------
 constant invert_mask	: std_logic_vector(23 downto 0) := x"CCCCCC"; --sign invert chs 0,1 on each ADC
 constant pre_trig_depth : integer := 192;
+constant NUM_CHANNELS : integer := 24;
+constant NUM_PA_CHANNELS : integer := 4;
+constant NUM_SAMPLES : integer := 4;
+constant SAMPLE_LENGTH : integer := 8;
+constant NUM_BEAMS : integer := 12;
+
 ---------------------                                   
-type wfm_data_type is array (0 to 23) of std_logic_vector(31 downto 0);   
-type pre_trig_wfm_data_type is array(0 to 23, 0 to pre_trig_depth-1) of std_logic_vector(31 downto 0);
-type trig_data_type is array (0 to 23) of std_logic_vector(63 downto 0);  
-type coinc_threshold_type is array(0 to 23) of std_logic_vector(7 downto 0);
-type beam_threshold_type is array(0 to 9) of std_logic_vector(15 downto 0);                 
-type ram_address_type is array(0 to 23) of std_logic_vector(9 downto 0);                 
+type wfm_data_type is array (0 to NUM_CHANNELS-1) of std_logic_vector(31 downto 0);   
+type pre_trig_wfm_data_type is array(0 to NUM_CHANNELS-1, 0 to pre_trig_depth-1) of std_logic_vector(31 downto 0);
+type trig_data_type is array (0 to NUM_CHANNELS-1) of std_logic_vector(31 downto 0);  
+type coinc_threshold_type is array(0 to NUM_CHANNELS-1) of std_logic_vector(7 downto 0);
+type beam_threshold_type is array(0 to NUM_BEAMS-1) of std_logic_vector(15 downto 0);                 
+type ram_address_type is array(0 to NUM_CHANNELS-1) of std_logic_vector(9 downto 0);                 
                
 --
 signal internal_ram_wr_en       : std_logic;                              
@@ -149,10 +155,16 @@ signal internal_ram_wr_data_0   : wfm_data_type;
 signal internal_ram_wr_data_1   : wfm_data_type; --pipeline
 signal internal_ram_wr_data_2   : wfm_data_type; --pipeline
 signal internal_ram_wr_data_3   : wfm_data_type; --pipeline
+signal internal_ram_wr_data_0_valid : std_logic_vector(NUM_CHANNELS-1 downto 0);
+signal internal_ram_wr_data_1_valid : std_logic_vector(NUM_CHANNELS-1 downto 0);
+signal internal_ram_wr_data_2_valid : std_logic_vector(NUM_CHANNELS-1 downto 0);
+signal internal_ram_wr_data_3_valid : std_logic_vector(NUM_CHANNELS-1 downto 0);
 signal internal_pretrig_data	  : pre_trig_wfm_data_type;
 
 signal internal_trig_data	  		: trig_data_type; --to trigger
 signal internal_trig_data_mf	  	: trig_data_type; --to trigger
+signal internal_trig_data_vect	: std_logic_vector(NUM_CHANNELS*NUM_SAMPLES*SAMPLE_LENGTH - 1 downto 0); --to trigger
+signal internal_trig_data_valid  : std_logic_vector(NUM_CHANNELS-1 downto 0);
 
 signal internal_ram_rd_data	  : wfm_data_type;
 signal internal_ram_wr_adr		  : std_logic_vector(9 downto 0); 
@@ -185,10 +197,13 @@ signal ptrigger_ctrl_trig_domain_mf 	: std_logic_vector(31 downto 0);
 signal ptrigger_ctrl_trig_domain    	: std_logic_vector(31 downto 0);
 signal coinc_trig_threshold_mf		: coinc_threshold_type;
 signal coinc_trig_threshold			: coinc_threshold_type;
+signal coinc_trig_threshold_vect		: std_logic_vector(NUM_CHANNELS*8-1 downto 0);
 signal beam_trig_threshold_mf			: beam_threshold_type;
 signal beam_trig_threshold				: beam_threshold_type;
+signal beam_trig_threshold_vect		: std_logic_vector(NUM_BEAMS*12-1 downto 0);
 signal beam_servo_threshold_mf		: beam_threshold_type;
 signal beam_servo_threshold			: beam_threshold_type;
+signal beam_servo_threshold_vect		: std_logic_vector(NUM_BEAMS*12-1 downto 0);
 
 signal posttrig_length_mf				: std_logic_vector(31 downto 0);
 signal posttrig_length					: std_logic_vector(31 downto 0);
@@ -220,12 +235,12 @@ signal last_event_clock_counter : std_logic_vector (31 downto 0);
 signal last_coinc_trig_hit_pattern_trig_clk : std_logic_vector(23 downto 0);	
 signal last_coinc_trig_hit_pattern_wr_clk : std_logic_vector(23 downto 0);	
 
-signal internal_last_beam_pattern_trig_clk : std_logic_vector(9 downto 0);
-signal internal_last_beam_pattern_wr_clk_latched : std_logic_vector(9 downto 0);
-signal beam_trigs_for_scalers : std_logic_vector(9 downto 0); 
-signal beam_servos_for_scalers : std_logic_vector(9 downto 0); 
+signal internal_last_beam_pattern_trig_clk : std_logic_vector(NUM_BEAMS-1 downto 0);
+signal internal_last_beam_pattern_wr_clk_latched : std_logic_vector(NUM_BEAMS-1 downto 0);
+signal beam_trigs_for_scalers : std_logic_vector(NUM_BEAMS-1 downto 0); 
+signal beam_servos_for_scalers : std_logic_vector(NUM_BEAMS-1 downto 0); 
 
-signal coinc_trig_to_scalars : std_logic_vector(27 downto 0);
+signal coinc_trig_to_scalars : std_logic_vector(51 downto 0);
 signal phased_trig_to_scalars : std_logic_vector(25 downto 0);
 signal coinc_trig0_hit_singles : std_logic_vector(11 downto 0);
 signal coinc_trig1_hit_singles : std_logic_vector(11 downto 0);
@@ -527,7 +542,7 @@ begin
 		last_evt_clkcount_reg_o		<= last_event_clock_counter;   
 		last_evt_ppscount_reg_o		<= x"0000" & last_event_pps_counter;    
 		last_evt_metamisc1_reg_o	<= x"00" & last_coinc_trig_hit_pattern_wr_clk;     
-		last_evt_metamisc2_reg_o	<= x"0000" & "000000" & internal_last_beam_pattern_wr_clk_latched; --//beam trigger details here eventually
+		last_evt_metamisc2_reg_o	<= x"0000" & "0000" & internal_last_beam_pattern_wr_clk_latched; --//beam trigger details here eventually
 		last_evt_trig_adr_reg_o		<= x"00" & last_event_trigger_type & "000000" & last_event_trigger_ram_wr_adr;
 		capture_stat_reg_o			<= x"000000" & "000000" & internal_event_ready & internal_event_busy;
 	end if;
@@ -631,6 +646,10 @@ begin
 			internal_pretrig_data(i,0) <= internal_ram_wr_data_3(i);
 			internal_ram_wr_data_3(i) <= internal_ram_wr_data_2(i); --//used for trigger
 			internal_ram_wr_data_2(i) <= internal_ram_wr_data_1(i); --//used for trigger
+			internal_ram_wr_data_3_valid(i) <= internal_ram_wr_data_2_valid(i);
+			internal_ram_wr_data_2_valid(i) <= internal_ram_wr_data_1_valid(i);
+			internal_ram_wr_data_1_valid(i) <= internal_ram_wr_data_0_valid(i);
+			internal_ram_wr_data_0_valid(i) <= adc_data_valid(i);
 			--//to handle backwards-balun wiring on some of the channels:
 			if invert_mask(i) = '1' then
 				internal_ram_wr_data_1(i) <= not internal_ram_wr_data_0(i);
@@ -661,7 +680,7 @@ begin
 			internal_trig_data(i)				<= (others => '0');
 			internal_trig_data_mf(i)			<= (others => '0');
 		end loop;
-		for i in 0 to 9 loop
+		for i in 0 to NUM_BEAMS-1 loop
 			beam_trig_threshold_mf(i)			<= (others => '0');
 			beam_trig_threshold(i)				<= (others => '0');
 			beam_servo_threshold_mf(i)			<= (others => '0');
@@ -704,11 +723,16 @@ begin
 		coinc_trig_threshold_mf(21)	<= coinc_trigger_thresh10_reg_i(23 downto 16);
 		coinc_trig_threshold_mf(22)	<= coinc_trigger_thresh11_reg_i(7 downto 0);
 		coinc_trig_threshold_mf(23)	<= coinc_trigger_thresh11_reg_i(23 downto 16);
-		for i in 0 to 23 loop
+
+		for i in 0 to num_channels-1 loop
 			coinc_trig_threshold(i)	<= coinc_trig_threshold_mf(i);
+			coinc_trig_threshold_vect((i+1)*SAMPLE_LENGTH-1 downto i*SAMPLE_LENGTH) <= coinc_trig_threshold_mf(i);
 			internal_trig_data(i) <= internal_trig_data_mf(i);
+			internal_trig_data_vect((i+1)*SAMPLE_LENGTH*NUM_SAMPLES-1 downto i*SAMPLE_LENGTH*NUM_SAMPLES) <= internal_trig_data_mf(i);
 			--//internal_ram_wr_data_1 is most recent ("latest") data, keeping with big-endien format
-			internal_trig_data_mf(i) <= internal_ram_wr_data_2(i) & internal_ram_wr_data_1(i);
+			--internal_trig_data_mf(i) <= internal_ram_wr_data_2(i) & internal_ram_wr_data_1(i);
+			internal_trig_data_mf(i) <= internal_ram_wr_data_1(i);
+			internal_trig_data_valid(i) <= internal_ram_wr_data_1_valid(i);
 		end loop;
 		
 		beam_trig_threshold_mf(0) 		<= beam_trig_thresh0_reg_i(15 downto 0);
@@ -731,9 +755,11 @@ begin
 		beam_servo_threshold_mf(8) 	<= beam_trig_thresh8_reg_i(31 downto 16);
 		beam_trig_threshold_mf(9) 		<= beam_trig_thresh9_reg_i(15 downto 0);
 		beam_servo_threshold_mf(9) 	<= beam_trig_thresh9_reg_i(31 downto 16);
-		for i in 0 to 9 loop
+		for i in 0 to NUM_BEAMS-1 loop
 			beam_trig_threshold(i)	<= beam_trig_threshold_mf(i);
 			beam_servo_threshold(i)	<= beam_servo_threshold_mf(i);
+			beam_trig_threshold_vect((i+1)*12-1 downto i*12) <= beam_trig_threshold_mf(i)(11 downto 0);
+			beam_servo_threshold_vect((i+1)*12-1 downto i*12) <= beam_servo_threshold_mf(i)(11 downto 0);
 		end loop;
 	end if;
 end process;
@@ -776,28 +802,36 @@ end process;
 --		trig_o		 => internal_coinc_trig_mf(0));
 --------------------------------------
 inst_coinc_trig : entity work.coinc_trigger_24_ch 
+   generic map( NUM_CHANNELS => NUM_CHANNELS,
+	NUM_SAMPLES => NUM_SAMPLES,
+	SAMPLE_LENGTH => SAMPLE_LENGTH
+	)
 	port map(
 		rst_i        => not arstn,
       clk_data_i	 => clk_trig, 
-		ch_data_i	 => internal_trig_data,	--8 samples of 8 bit data (64 bits wide)
-		trig_0_enable_i => trigger_ctrl1_trig_domain(1 downto 0),
-		trig_0_ch_mask_i => trigger_ctrl1_trig_domain(27 downto 16),
-		trig_1_enable_i => trigger_ctrl2_trig_domain(1 downto 0),
-		trig_1_ch_mask_i => trigger_ctrl2_trig_domain(27 downto 16),
+		ch_data_i	 => internal_trig_data_vect,	--8 samples of 8 bit data (64 bits wide)
+		ch_data_valid_i => internal_trig_data_valid,
+		trig_0_enable_i => trigger_ctrl1_trig_domain(1) and trigger_ctrl1_trig_domain(0),
+		trig_0_ch_mask_i => trigger_ctrl2_trig_domain(27 downto 16) & trigger_ctrl1_trig_domain(27 downto 16),
+		trig_1_enable_i => trigger_ctrl2_trig_domain(1) and trigger_ctrl2_trig_domain(0),
+		trig_1_ch_mask_i => trigger_ctrl2_trig_domain(27 downto 16) & trigger_ctrl1_trig_domain(27 downto 16),
 		
-		vpp_mode_i => trigger_ctrl2_trig_domain(5),
-	   coinc_window_i => trigger_ctrl2_trig_domain(11 downto 8),
-		num_coinc_i => trigger_ctrl2_trig_domain(4 downto 2),
+		vpp_mode_i => trigger_ctrl1_trig_domain(5),
+	   coinc_window_i => "0" & trigger_ctrl1_trig_domain(11 downto 8),
+		num_coinc_i => "00" & trigger_ctrl1_trig_domain(4 downto 2),
 		
-		trig_thresholds_i => coinc_trig_threshold,
-		--servo_thresholds_i => --fill
+		trig_thresholds_i => coinc_trig_threshold_vect,
+		servo_thresholds_i => coinc_trig_threshold_vect,--fill with servo thresholds
 		trig_bits_o => coinc_trig_to_scalars,
-		trig0_o => internal_coinc_trig_mf(0),
-		trig0_metadata_o => last_coinc_trig_hit_pattern_trig_clk(11 downto 0),
-		trig1_o => internal_coinc_trig_mf(1),
-		trig_1_metadata_o => last_coinc_trig_hit_pattern_trig_clk(23 downto 12));
+		trig_0_o => internal_coinc_trig_mf(0),
+		trig_0_metadata_o => last_coinc_trig_hit_pattern_trig_clk(23 downto 0),
+		trig_1_o => internal_coinc_trig_mf(1),
+		trig_1_metadata_o => open--last_coinc_trig_hit_pattern_trig_clk(23 downto 12)
+		);
 --------------------------------------
 inst_beam_trig : entity work.power_trigger
+   generic map (NUM_PA_CHANNELS => NUM_PA_CHANNELS,
+	NUM_BEAMs => NUM_BEAMS)
 	port map(
 		rst_i      		=> not arstn,
       clk_data_i		=> clk_trig,
@@ -805,14 +839,14 @@ inst_beam_trig : entity work.power_trigger
 		ch1_data_i		=> internal_trig_data(1),
 		ch2_data_i		=> internal_trig_data(2),
 		ch3_data_i		=> internal_trig_data(3),
-		data_valid_i	=> x"f",--fill
+		data_valid_i	=> internal_trig_data_valid(3 downto 0),--fill
 		
 		clk_reg_i		=> clk_trig,
-		enable_i 		=> ptrigger_ctrl_trig_domain(1 downto 0),
+		enable_i 		=> ptrigger_ctrl_trig_domain(1) and ptrigger_ctrl_trig_domain(0),
 		beam_mask_i		=> ptrigger_ctrl_trig_domain(27 downto 16),
-		channel_mask_i	=> ptrigger_ctrl_trig_somain(15 downto 12),
-		trig_thresholds_i => beam_trig_threshold,
-		servo_thresholds_i => beam_servo_threshold,
+		channel_mask_i	=> ptrigger_ctrl_trig_domain(15 downto 12),
+		trig_thresholds_i => beam_trig_threshold_vect,
+		servo_thresholds_i => beam_servo_threshold_vect,
 		
 		trig_bits_o 	=> phased_trig_to_scalars,
 		trig_o 			=> internal_phased_trig,
@@ -830,6 +864,8 @@ inst_beam_trig : entity work.power_trigger
 		--beamservos_o => beam_servos_for_scalers
 --------------------------------------		
 inst_scalers : entity work.new_scalers_top
+   generic map (NUM_CHANNELS => NUM_CHANNELS,
+	NUM_BEAMs => NUM_BEAMS)
 	port map(
 		rst_i						=> not arstn, --//rst is active high on this module
 		clk_i						=> clk_trig,
@@ -840,9 +876,9 @@ inst_scalers : entity work.new_scalers_top
 		pps_i						=> internal_pps_trigclk(2),
 		gate_i					=> internal_pps_trigclk(2),
 		
-		scalar_refresh_i		=> scaler_sel_reg_i(16),
-		scalar_to_read_i		=> scaler_sel_reg_i(9 downto 0),
-		scalar_o					=> scaler_read_reg_o
+		scaler_refresh_i		=> scaler_sel_reg_i(16),
+		scaler_to_read_i		=> scaler_sel_reg_i(9 downto 0),
+		scaler_o					=> scaler_read_reg_o
 		);
 		--
 --		rdclk_i					=> clk_rd,

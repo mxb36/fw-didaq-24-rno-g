@@ -467,6 +467,20 @@ set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE tap_spiSlave.stp
 
 set_global_assignment -name OPTIMIZATION_MODE "HIGH PERFORMANCE EFFORT WITH MAXIMUM PLACEMENT EFFORT"
+set_global_assignment -name VERILOG_FILE ../src/trigger_dev/rtl/flag_sync.v
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/waveform_storage.vhdl
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/upsampling.vhdl
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/single_event.vhdl
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/single_channel_ram.vhdl
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/signal_sync.vhdl
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/scalers_top.vhd
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/ram_control.vhdl
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/power_lut_8.vhdl
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/power_integration.vhdl
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/power_trigger.vhd
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/event_top.vhdl
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/coinc_trigger.vhdl
+set_global_assignment -name VHDL_FILE ../src/trigger_dev/rtl/beamforming.vhdl
 set_global_assignment -name QSYS_FILE ../src/altera_p2_board/niosv/niosv_pd.qsys
 set_global_assignment -name SDC_FILE artic_daq.sdc
 set_global_assignment -name IP_FILE ../src/altera_p2_board/niosv/ip/niosv_pd/niosv_pd_intel_generic_serial_flash_interface_top_0.ip
@@ -540,3 +554,4 @@ set_global_assignment -name IP_FILE ../src/altera_p2_board/niosv/ip/niosv_pd/nio
 set_global_assignment -name SEARCH_PATH ../src
 set_global_assignment -name SEARCH_PATH ../src/didaq_acq_and_trig
 set_global_assignment -name VHDL_FILE ../src/didaq_acq_and_trig/dedispersion.vhd
+set_global_assignment -name VHDL_INPUT_VERSION VHDL_2008

@@ -3,12 +3,14 @@
 library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.defs.all;
+--use work.defs.all;
 
 entity event_top is
     generic(
         SAMPLE_LENGTH : integer := 8; -- n bit samples
         NUM_SAMPLES : integer := 4; -- samples per clock
+        NUM_CHANNELS : integer := 24;
+        NUM_BEAMS : integer := 12;
         ADDR_DEPTH : integer := 9; --2^9 - 1 deep ram
         NUM_EVENTS : integer := 2 -- 2^num_events
     );

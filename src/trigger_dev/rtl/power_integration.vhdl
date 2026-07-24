@@ -1,9 +1,15 @@
 library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.defs.all;
+--use work.defs.all;
 
 entity power_integration is    
+    generic(
+            INTERP_FACTOR : integer := 2;
+            NUM_SAMPLES : integer := 4;
+            SAMPLE_LENGTH : integer := 8;
+            NUM_BEAMS : integer := 12
+            );
     port(
             rst_i		: in std_logic;
             clk_data_i	: in std_logic; --data clock

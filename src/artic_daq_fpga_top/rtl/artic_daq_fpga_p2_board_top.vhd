@@ -1708,7 +1708,7 @@ inst_adc_data_and_trig_handler : didaq_acq_and_trig
       arstn                      => adc_data_buffer_rstn,
       clk_wr                     => clk_wide, 
       clk_rd                     => clk_avl, 
-		clk_trig							=> clk_trig,		
+		clk_trig							=> clk_data,		
       -- Data form the JESD link
       -- All of these re in the clk_wide domain  
       adc_data_valid     	=> adc_wide_data_valid,                                        

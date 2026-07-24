@@ -15,11 +15,16 @@
 library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.defs.all;
+--use work.defs.all;
 
 entity power_trigger is
 generic(
-        station_number : std_logic_vector(7 downto 0):=x"0b"
+        station_number : std_logic_vector(7 downto 0):=x"0b";
+		  NUM_PA_CHANNELS : integer := 4;
+		  NUM_BEAMS : integer := 12;
+		  NUM_SAMPLES : integer := 4;
+		  SAMPLE_LENGTH : integer := 8;
+		  INTERP_FACTOR : integer := 2
         );
 
 port(
@@ -67,7 +72,7 @@ constant input_power_thresh_bits:	integer := 12;
 constant power_length: integer := 12;
 constant num_div: integer := 5;--can be calculated using -> integer(log2(real(phased_sum_length)));
 constant pad_zeros: std_logic_vector(num_div-1 downto 0):=(others=>'0');
-constant NUM_PA_CHANNELS:integer:=4;
+--constant NUM_PA_CHANNELS:integer:=4;
                                     
 --short streaming regs to ease timing (if needed at all)
 type streaming_data_array is array(NUM_PA_CHANNELS downto 0, NUM_SAMPLES-1 downto 0) of signed(7 downto 0);

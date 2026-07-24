@@ -5,9 +5,15 @@
 library IEEE;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.defs.all;
+--use work.defs.all;
 
 entity upsampling is
+    generic(
+		NUM_CHANNELS   : integer := 24;
+		SAMPLE_LENGTH   : integer := 8;
+		NUM_SAMPLES   : integer := 4;
+		NUM_PA_CHANNELS   : integer := 4;
+		INTERP_FACTOR   : integer := 2);
     port(
             rst_i       : in std_logic;
             clk_data_i  : in std_logic;
@@ -55,10 +61,10 @@ architecture rtl of upsampling is
     --signal int_up13: fir_temp:=(others=>(others=>x"0000"));
     --signal int_up14: fir_temp:=(others=>(others=>x"0000"));
     --signal int_up15: fir_temp:=(others=>(others=>x"0000"));
-
-    signal int_helpa: fir_temp:=(others=>(others=>x"0000"));
-    signal int_helpb: fir_temp:=(others=>(others=>x"0000"));
-    signal int_helpc: fir_temp:=(others=>(others=>x"0000"));
+    type fir_help is array(3 downto 0, NUM_SAMPLES*INTERP_FACTOR-1+upsample_filter_length downto 0) of signed(15 downto 0);
+    signal int_helpa: fir_help:=(others=>(others=>x"0000"));
+    signal int_helpb: fir_help:=(others=>(others=>x"0000"));
+    signal int_helpc: fir_help:=(others=>(others=>x"0000"));
 
     signal int_pre_up0: fir_temp:=(others=>(others=>x"0000"));
     signal int_pre_up1: fir_temp:=(others=>(others=>x"0000"));
@@ -110,27 +116,27 @@ begin
 
 			--this code is a more efficient version of the commented convolution below, original code left commented for clarity
  			
-			int_helpa(ch,sam) <= padded_sig(ch,sam)-left_shift(padded_sig(ch,sam+4),2); --sample x -2*sample x+4
- 			int_helpb(ch,sam) <= -left_shift(padded_sig(ch,sam),2)+padded_sig(ch,sam+4); -- -2*sample x + sample 4
-			int_helpc(ch,sam) <= 57*(padded_sig(ch,sam)+padded_sig(ch,sam+2);
+			int_helpa(ch,sam) <= padded_sig(ch,sam)-("000000"&padded_sig(ch,sam+4)&"00"); --sample x -2*sample x+4
+ 			int_helpb(ch,sam) <= -("000000"&padded_sig(ch,sam)&"00")+padded_sig(ch,sam+4); -- -2*sample x + sample 4
+			int_helpc(ch,sam) <= 57*(padded_sig(ch,sam)+padded_sig(ch,sam+2));
 			-- padded sig signals have +8 since helps are delayed one clock/8 samples
-			if sam(0)='0' then -- all odd samples are 0
-		 		int_up0(ch,sam) <= int_helpa(ch,sam)+int_helpa(ch,sam+8)+left_shift(int_helpa(ch,sam+8),2)-padded_sig(ch,sam+8+8); -- 0 is 1, 4 is -2, 8 is 1+4, 12 is -8-2-1
-				int_up1(ch,sam) <= left_shift(padded_sig(ch,sam+16+8),5)+left_shift(padded_sig(ch,sam+16+8),3) + left_shift(padded_sig(ch,sam+20+8),5)+left_shift(padded_sig(ch,sam+20+8),3); -- 40 is 32+8 = 2^5+2^3 for sample 16 same for sample 20
-				int_up2(ch,sam) <= left_shift(int_helpb(ch,sam+24),2) + int_helpa(ch,sam+24)-padded_sig(ch,sam+24+8)+int_helpa(ch,sam+32);  -- 24 is -8-2-1, 28 is 1+4, 32 is -2, 36 is 1
+			if ((sam mod 2)=0) then -- all odd samples are 0
+		 		int_up0(ch,sam) <= int_helpa(ch,sam)+int_helpa(ch,sam+8)+(int_helpa(ch,sam+8)(13 downto 0)&"00")-padded_sig(ch,sam+8+8); -- 0 is 1, 4 is -2, 8 is 1+4, 12 is -8-2-1
+				int_up1(ch,sam) <= ("000"&padded_sig(ch,sam+16+8)&"00000")+("00000"&padded_sig(ch,sam+16+8)&"000") + ("000"&padded_sig(ch,sam+20+8)&"00000")+("00000"&padded_sig(ch,sam+20+8)&"000"); -- 40 is 32+8 = 2^5+2^3 for sample 16 same for sample 20
+				int_up2(ch,sam) <= (int_helpb(ch,sam+24)(13 downto 0)&"00") + int_helpa(ch,sam+24)-padded_sig(ch,sam+24+8)+int_helpa(ch,sam+32);  -- 24 is -8-2-1, 28 is 1+4, 32 is -2, 36 is 1
 				--int_up3(ch,samp) <= left_shift(padded_sig(ch,sam+18+8),6); -- no partner, so delay calcs
 
-				int_up(ch,sam) <= int_up0(ch,sam)+int_up1(ch,sam)+int_up2(ch,sam)+left_shift(padded_sig(ch,sam+18+16),6);
+				int_up(ch,sam) <= int_up0(ch,sam)+int_up1(ch,sam)+int_up2(ch,sam)+("00"&padded_sig(ch,sam+18+16)&"000000");
 			else -- all even samples are 0
-				int_pre_up0(ch,sam) <= -left_shift(padded_sig(ch,sam+11),2)- left_shift(padded_sig(ch,sam+13),1) + left_shift(padded_sig(ch,sam+15),4)+padded_sig(ch,sam+15);
-				int_pre_up1(ch,sam) <= -left_shift(padded_sig(ch,sam+25),2)- left_shift(padded_sig(ch,sam+23),1) + left_shift(padded_sig(ch,sam+21),4)+padded_sig(ch,sam+21);
+				int_pre_up0(ch,sam) <= -("000000"&padded_sig(ch,sam+11)&"00")- ("0000000"&padded_sig(ch,sam+13)&"0") + ("0000"&padded_sig(ch,sam+15)&"0000")+padded_sig(ch,sam+15);
+				int_pre_up1(ch,sam) <= -("000000"&padded_sig(ch,sam+25)&"00")- ("0000000"&padded_sig(ch,sam+23)&"0") + ("0000"&padded_sig(ch,sam+21)&"0000")+padded_sig(ch,sam+21);
 				
-				int_up0(ch,sam) <= int_helpa(ch,sam+1) - int_helpa(ch,sam+3) + int_helpa(ch,sam+7)+ left_shift(int_helpa(ch,sam+9),2);
-				int_up1(ch,sam) <= int_helpb(ch,sam+31) - int_helpb(ch,sam+29) + int_helpb(ch,sam+25)+ left_shift(int_helpb(ch,sam+23),2);
-				int_up2(ch,sam) <= int_pre_up0(ch,sam)+int_pre_up1(ch,sam)+int_helpc;
+				int_up0(ch,sam) <= int_helpa(ch,sam+1) - int_helpa(ch,sam+3) + int_helpa(ch,sam+7)+ (int_helpa(ch,sam+9)(13 downto 0)&"00");
+				int_up1(ch,sam) <= int_helpb(ch,sam+31) - int_helpb(ch,sam+29) + int_helpb(ch,sam+25)+ (int_helpb(ch,sam+23)(13 downto 0)&"00");
+				int_up2(ch,sam) <= int_pre_up0(ch,sam)+int_pre_up1(ch,sam)+int_helpc(ch,sam);
 				
 				int_up(ch,sam) <= int_up0(ch,sam)+int_up1(ch,sam)+int_up2(ch,sam);
-			end if
+			end if;
 
                     --convolve with filter in parts
                     ---2,6,10,14,22,26.30,34 zero
