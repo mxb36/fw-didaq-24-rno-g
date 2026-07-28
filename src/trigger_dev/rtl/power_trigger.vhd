@@ -25,7 +25,7 @@ generic(
 		  NUM_SAMPLES : integer := 4;
 		  SAMPLE_LENGTH : integer := 8;
 		  INTERP_FACTOR : integer := 2;
-        input_power_thresh_bits:	integer := 16;
+        input_power_thresh_bits:	integer := 16
         );
 
 port(
@@ -79,12 +79,13 @@ type streaming_data_array is array(NUM_PA_CHANNELS downto 0, NUM_SAMPLES-1 downt
 signal streaming_data : streaming_data_array := (others=>(others=>(others=>'0'))); --pipeline data
 
 --big arrays for thresholds/ average power
-type power_array is array (NUM_BEAMS-1 downto 0) of unsigned(input_power_thresh_bits-1 downto 0);-- range 0 to 2**num_power_bits-1;--std_logic_vector(num_power_bits-1 downto 0); --log2(6*(16*6)^2) max power possible
-signal trig_beam_thresh : power_array:=(others=>(others=>'0')) ; --trigger thresholds for all beams
-signal servo_beam_thresh : power_array:=(others=>(others=>'0')) ;--(others=>(others=>'0')) --servo thresholds for all beams
+type thresh_array is array (NUM_BEAMS-1 downto 0) of unsigned(input_power_thresh_bits-1 downto 0);-- range 0 to 2**num_power_bits-1;--std_logic_vector(num_power_bits-1 downto 0); --log2(6*(16*6)^2) max power possible
+signal trig_beam_thresh : thresh_array:=(others=>(others=>'0')) ; --trigger thresholds for all beams
+signal servo_beam_thresh : thresh_array:=(others=>(others=>'0')) ;--(others=>(others=>'0')) --servo thresholds for all beams
 --signal power_sum : power_array:=(others=>(others=>'0')); --power integration using all 32 samples
 --signal power_sum_overlap : power_array:=(others=>(others=>'0')); --power integration using all 32 samples
 
+type power_array is array (NUM_BEAMS-1 downto 0) of unsigned(14-1 downto 0);-- range 0 to 2**num_power_bits-1;--std_logic_vector(num_power_bits-1 downto 0); --log2(6*(16*6)^2) max power possible
 signal avg_power0: power_array:=(others=>(others=>'0')); --average power (power_sum shifted down by log2(32)=5 bits)
 signal avg_power1: power_array:=(others=>(others=>'0')); --average power (power_sum shifted down by log2(32)=5 bits)
 signal avg_power2: power_array:=(others=>(others=>'0')); --average power (power_sum shifted down by log2(32)=5 bits)

@@ -555,3 +555,4 @@ set_global_assignment -name SEARCH_PATH ../src
 set_global_assignment -name SEARCH_PATH ../src/didaq_acq_and_trig
 set_global_assignment -name VHDL_FILE ../src/didaq_acq_and_trig/dedispersion.vhd
 set_global_assignment -name VHDL_INPUT_VERSION VHDL_2008
+set_global_assignment -name PROJECT_IP_REGENERATION_POLICY ALWAYS_REGENERATE_IP

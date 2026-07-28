@@ -203,10 +203,10 @@ signal coinc_trig_threshold			: coinc_threshold_type;
 signal coinc_trig_threshold_vect		: std_logic_vector(NUM_CHANNELS*8-1 downto 0);
 signal beam_trig_threshold_mf			: beam_threshold_type;
 signal beam_trig_threshold				: beam_threshold_type;
-signal beam_trig_threshold_vect		: std_logic_vector(NUM_BEAMS*12-1 downto 0);
+signal beam_trig_threshold_vect		: std_logic_vector(NUM_BEAMS*16-1 downto 0);
 signal beam_servo_threshold_mf		: beam_threshold_type;
 signal beam_servo_threshold			: beam_threshold_type;
-signal beam_servo_threshold_vect		: std_logic_vector(NUM_BEAMS*12-1 downto 0);
+signal beam_servo_threshold_vect		: std_logic_vector(NUM_BEAMS*16-1 downto 0);
 
 signal posttrig_length_mf				: std_logic_vector(31 downto 0);
 signal posttrig_length					: std_logic_vector(31 downto 0);
