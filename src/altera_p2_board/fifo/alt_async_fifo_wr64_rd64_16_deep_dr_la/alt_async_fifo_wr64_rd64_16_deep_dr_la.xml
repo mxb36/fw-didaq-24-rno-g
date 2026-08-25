@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <deploy
- date="2026.07.28.12:52:34"
+ date="2026.08.25.16:17:12"
  outputDirectory="C:/Users/mob5419/RNO-G/git/fw-didaq-24-rno-g/src/altera_p2_board/fifo/alt_async_fifo_wr64_rd64_16_deep_dr_la/">
  <perimeter>
   <parameter
