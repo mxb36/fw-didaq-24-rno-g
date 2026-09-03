@@ -430,6 +430,7 @@ begin
 					end if;
 					if internal_trigger_or = '1' then 
 						internal_ram_wr_state <= internal_ram_wr_state + 1;	
+						internal_ram_wr_en <= '1';
 					end if;
 					
 				when "01"=> --//write to ram
@@ -446,7 +447,8 @@ begin
 					end if;
 
 					if internal_posttrig_wr_adr = 1023 then --fixed post trigger rn, eventually programmable maybe
-						internal_ram_wr_state <= internal_ram_wr_state + 1;	
+						internal_ram_wr_state <= internal_ram_wr_state + 1;
+						internal_ram_wr_en <= '0';
 					end if;
 					
 				when "10"=> --// hold, wait until ready for next event	
@@ -585,23 +587,15 @@ begin
 		   if internal_ram_connected_in = '0' then
 				last_event_clock_counter <= internal_clock_counter;
 				last_event_pps_counter <= internal_pps_counter;
-				if(internal_event_ready(0) = '1') then
-					internal_event_counter <= internal_event_counter + 1;
-					last_internal_event_counter <= internal_event_counter + 1;
-				else
-					last_internal_event_counter <= internal_event_counter;
-				end if;
+				internal_event_counter <= internal_event_counter + 1;
+				last_internal_event_counter <= internal_event_counter + 1;
 				last_coinc_trig_hit_pattern_wr_clk <= last_coinc_trig_hit_pattern_trig_clk;
 				internal_last_beam_pattern_wr_clk_latched <= internal_last_beam_pattern_trig_clk;
 			else -- if internal_ram_connected_in = '1'
 				last_event_clock_counter_2 <= internal_clock_counter;
 				last_event_pps_counter_2 <= internal_pps_counter;
-				if(internal_event_ready(1) = '1') then
-					internal_event_counter <= internal_event_counter + 1;
-					last_internal_event_counter_2 <= internal_event_counter + 1;
-				else
-					last_internal_event_counter_2 <= internal_event_counter;
-				end if;
+				internal_event_counter <= internal_event_counter + 1;
+				last_internal_event_counter_2 <= internal_event_counter + 1;
 				last_coinc_trig_hit_pattern_wr_clk_2 <= last_coinc_trig_hit_pattern_trig_clk;
 				internal_last_beam_pattern_wr_clk_latched_2 <= internal_last_beam_pattern_trig_clk;
 			end if;
