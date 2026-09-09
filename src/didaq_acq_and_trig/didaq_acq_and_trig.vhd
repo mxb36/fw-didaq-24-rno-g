@@ -225,7 +225,7 @@ signal internal_trigger_state : std_logic_vector(1 downto 0);
 signal internal_event_busy		: std_logic_vector(1 downto 0);  --event captured, don't accept new triggers until cleared by SBC
 signal internal_event_done		: std_logic;  --done signal comes from SBC to clear event_busy
 signal internal_event_ready	: std_logic_vector(1 downto 0);  --ready signal after data is in RAM, awaiting SBC read or clear
-signal internal_event_clear	: std_logic_vector(1 downto 0);  --clear data flag for processing
+signal internal_event_switching: std_logic;  --clear data flag for processing
 signal internal_pps				: std_logic_vector(2 downto 0); --lsb is mf
 signal internal_pps_risedge	: std_logic; --rising edge capture
 signal internal_pps_trigclk	: std_logic_vector(2 downto 0); --lsb is mf
@@ -397,6 +397,7 @@ begin
 		internal_event_ready <= "00";
 		internal_ram_connected_out <= '0';
 		internal_ram_connected_in <= '0';
+		internal_event_switching <= '0';
 		
 	elsif clk_wr'event and clk_wr = '1'and capture_ctrl_wr_domain(16) = '1' then	
 		internal_ram_wr_adr <= (others=>'0');
@@ -409,6 +410,7 @@ begin
 		internal_event_ready <= "00";
 		internal_ram_connected_in <= '0';
 		internal_ram_connected_in <= '0';
+		internal_event_switching <= '0';
 
 	elsif clk_wr'event and clk_wr = '1' then	
 		
@@ -508,34 +510,25 @@ begin
 			end case;
 			
 			--process reads
-			if internal_event_done = '1' then
+			if internal_event_done = '1' and internal_event_switching = '0' then
 				if internal_ram_connected_out = '0' then
 					if internal_event_busy(0) = '1' and internal_event_ready(0) = '1' then
 						internal_event_ready(0) <= '0';
-						internal_event_clear(0) <= '1';
+						internal_event_busy(0) <= '0';
+						internal_event_switching <= '1';
+						internal_ram_connected_out <= '1';
+						
 					end if;
 				else --if internal_ram_connected_out = '1' then
 					if internal_event_busy(1) = '1' and internal_event_ready(1) = '1' then
 						internal_event_ready(1) <= '0';
-						internal_event_clear(1) <= '1';
-					end if;
-				end if;
-			else -- if internal_event_done = '0' then
-				--switch banks when done has stopped being asserted
-				if internal_ram_connected_out = '0' then
-					if internal_event_busy(0) = '1' and internal_event_clear(0) = '1' then
-						internal_event_clear(0) <= '0';
-						internal_event_busy(0) <= '0';
-						internal_ram_connected_out <= '1';
-					end if;
-				else --if internal_ram_connected_out = '1' then
-					if internal_event_busy(1) = '1' and internal_event_clear(1) = '1' then
-						internal_event_clear(1) <= '0';
 						internal_event_busy(1) <= '0';
+						internal_event_switching <= '1';
 						internal_ram_connected_out <= '0';
 					end if;
 				end if;
-				
+			elsif internal_event_done = '0' and internal_event_switching = '1' then
+				internal_event_switching <= '0';
 			end if;
 			
 	end if;
